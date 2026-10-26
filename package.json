@@ -1,0 +1,25 @@
+{
+  "name": "saa-patch-2-6-trivy-exec",
+  "version": "1.0.0",
+  "description": "Presenter-driven executive deck that runs the Spring Application Advisor demo live with synced slides",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "smoke": "node scripts/smoke-test.js",
+    "postinstall": "chmod +x node_modules/node-pty/prebuilds/*/spawn-helper 2>/dev/null || true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "node-pty": "^1.1.0",
+    "reveal.js": "^6.0.2",
+    "ws": "^8.22.0",
+    "xterm": "^5.3.0"
+  },
+  "allowScripts": {
+    "node-pty@1.1.0": true
+  }
+}
