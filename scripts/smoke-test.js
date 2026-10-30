@@ -3,6 +3,7 @@
 // client, drives the PTY forward, and asserts beat detection + slide mapping.
 const { WebSocket } = require('ws');
 const http = require('http');
+const fs = require('fs');
 
 process.env.PORT = process.env.PORT || '4199';
 process.env.DEMO_SCRIPT = './scripts/smoke-demo.sh';
@@ -26,6 +27,71 @@ function getJson(path) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
+  const setup = fs.readFileSync('setup-env.sh', 'utf8');
+  for (const version of ['JAVA8_VERSION', 'JAVA17_VERSION', 'JAVA27_VERSION']) {
+    if (!setup.includes(`${version}=$(grep`)) {
+      throw new Error(`setup-env.sh does not provision ${version}`);
+    }
+  }
+  const deckHtml = fs.readFileSync('docs/index.html', 'utf8');
+  const deckJs = fs.readFileSync('docs/js/app.js', 'utf8');
+  const beatsJs = fs.readFileSync('docs/js/beats.js', 'utf8');
+  const realVerifier = fs.readFileSync('scripts/verify-java27.js', 'utf8');
+  const slideCount = (deckHtml.match(/<section class="beat"/g) || []).length;
+  if (slideCount !== 20) {
+    throw new Error(`single-upgrade deck should have 20 slides (got ${slideCount})`);
+  }
+  for (const removedStory of ['dashaun-demo', 'advisor-loop', 'advisor-verify', 'Tanzu Hub', 'entire portfolio']) {
+    if (deckHtml.includes(removedStory)) {
+      throw new Error(`single-upgrade deck still contains removed story: ${removedStory}`);
+    }
+  }
+  if (!deckHtml.includes('One application. Live. Right now.')) {
+    throw new Error('start slide should introduce the single application directly');
+  }
+  if (!beatsJs.includes('{ beat: 1,  slide: 2 }')) {
+    throw new Error('live demo should begin on slide 2');
+  }
+  if (!beatsJs.includes('{ beat: 31, slide: 19 }')) {
+    throw new Error('final demo beat should land on slide 19');
+  }
+  if (!beatsJs.includes('window.DEMO_SLIDE_FIRST = 2') || !beatsJs.includes('window.DEMO_SLIDE_LAST = 19')) {
+    throw new Error('demo-owned slide range should cover slides 2 through 19');
+  }
+  if (!realVerifier.includes("'all 31 beats reached': beat === 31")) {
+    throw new Error('real verifier should require the final comparison beat');
+  }
+  if (!realVerifier.includes("'demo exited cleanly': exitCode === 0")) {
+    throw new Error('real verifier should require a clean demo exit');
+  }
+  if (!deckHtml.includes('id="upgrade-outcome"')) {
+    throw new Error('upgrade outcome copy is not connected to live CVE results');
+  }
+  if (!deckJs.includes("f.cves === 0")) {
+    throw new Error('upgrade outcome does not adapt when Advisor clears every CVE');
+  }
+  // the published deck must replay a recorded walkthrough when no live server
+  // is reachable (GitHub Pages), and navigate normally (forward + backward)
+  if (!deckJs.includes('recorded/walkthrough.json') || !deckJs.includes('function renderRecordedSlide')) {
+    throw new Error('deck is missing the recorded walkthrough replay mode');
+  }
+  if (!deckJs.includes("deck.on('slidechanged', (e) => {") ) {
+    throw new Error('recorded deck must render state on Reveal navigation (forward + backward)');
+  }
+  const recording = JSON.parse(fs.readFileSync('docs/recorded/walkthrough.json', 'utf8'));
+  const recBeats = recording.events.filter((e) => e.type === 'beat').map((e) => e.beat);
+  if (String(recBeats) !== Array.from({ length: 31 }, (_, i) => i + 1).join(',')) {
+    throw new Error('recorded walkthrough must contain all 31 beats in order');
+  }
+  const recStages = new Set();
+  for (const e of recording.events) if (e.type === 'stats') e.stats.forEach((s) => recStages.add(s.stage));
+  if (!recStages.has('java8with2.6') || !recStages.has('java27with4.0') || !recStages.has('java27patched')) {
+    throw new Error('recorded walkthrough must cover all three stages');
+  }
+  if (recording.events[recording.events.length - 1].type !== 'exit' || recording.events[recording.events.length - 1].code !== 0) {
+    throw new Error('recorded walkthrough must end with a clean exit');
+  }
+
   const events = [];
   const ws = await new Promise((resolve, reject) => {
     const ws = new WebSocket(URL);

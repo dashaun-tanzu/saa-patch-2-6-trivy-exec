@@ -6,19 +6,35 @@
   // ------------------------------------------------------------------
   let ws = null;
   const pending = []; // messages to send once connected
+  const wantLive = !new URLSearchParams(location.search).has('recorded');
 
   function connect() {
+    // GitHub Pages is static: there is no WS/PTY server. If one can't be
+    // reached (or we're forced with ?recorded), fall back to replaying the
+    // recorded walkthrough in the same click-through model.
+    if (!wantLive) { enterRecorded(); return; }
+
     ws = new WebSocket(`ws://${location.host}/ws`);
+    const failTimer = setTimeout(() => {
+      if (!ws || ws.readyState !== 1) { enterRecorded(); }
+    }, 2500);
     ws.onopen = () => {
+      clearTimeout(failTimer);
       setStatus('connected');
       while (pending.length) ws.send(pending.shift());
     };
     ws.onmessage = (ev) => handleMessage(JSON.parse(ev.data));
     ws.onclose = () => {
+      clearTimeout(failTimer);
+      if (recordedMode) return;
       setStatus('disconnected — retrying…');
       setTimeout(connect, 1500);
     };
-    ws.onerror = () => ws.close();
+    ws.onerror = () => {
+      clearTimeout(failTimer);
+      if (!ws || ws.readyState !== 1) enterRecorded();
+      else ws.close();
+    };
   }
 
   function send(obj) {
@@ -80,13 +96,16 @@
       touch: false,
     });
     deck.initialize();
-    deck.on('slidechanged', (e) => maybeOpenSlide(e.indexh));
+    deck.on('slidechanged', (e) => {
+      maybeOpenSlide(e.indexh);
+      renderRecordedSlide(e.indexh);
+    });
     // in case the page loads directly onto a slide that auto-opens a URL
     maybeOpenSlide(deck.getIndices().h);
   }
 
   // ------------------------------------------------------------------
-  // Auto-open URLs (e.g. Tanzu Hub): a slide with data-open-url="..." opens
+  // Auto-open URLs: a slide with data-open-url="..." opens
   // that URL once per page load, when the slide becomes visible. The server
   // performs the actual `open` on the presenter's machine.
   // ------------------------------------------------------------------
@@ -155,6 +174,106 @@
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (demoActive) { forwardKey(e); return; }
     navigateDeck(e);
+  }
+
+  // ------------------------------------------------------------------
+  // Recorded walkthrough: when the deck is served statically (GitHub
+  // Pages), the demo output is replayed from recorded/walkthrough.json.
+  // Navigation is standard Reveal (← / → / arrows / controls) — moving to a
+  // slide shows the terminal and live stats as they were at that point in
+  // the demo, so you can step forward and backward like a normal deck.
+  // ------------------------------------------------------------------
+  let recordedMode = false;
+  let recording = null;      // { meta, events } from recorded/walkthrough.json
+  let recEndIdx = {};        // slide -> event index to replay up to (per slide)
+
+  function enterRecorded() {
+    if (recordedMode) return;
+    recordedMode = true;
+    if (ws) { try { ws.close(); } catch (_) { /* noop */ } }
+    document.body.classList.add('recorded');
+    setStatus('loading recorded walkthrough…');
+    const title = document.getElementById('term-title');
+    if (title) title.textContent = 'demo.sh — recorded';
+    const hint = document.getElementById('start-hint');
+    if (hint) hint.textContent = 'Use ← / → to move through the demo. The terminal below shows each stage.';
+    loadRecording();
+  }
+
+  async function loadRecording() {
+    try {
+      const res = await fetch('recorded/walkthrough.json');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      recording = await res.json();
+      computeRecEndIdx();
+      // guarantee the static deck opens on the title slide even on a cold load
+      goToSlide(0);
+      setStatus('recorded · use ← / → to navigate');
+    } catch (err) {
+      setStatus('recorded data unavailable');
+      console.error('recorded walkthrough:', err);
+    }
+  }
+
+  // For each demo slide, work out how far through the recorded event stream
+  // to replay so the terminal shows that slide's completed step. A `clear`
+  // wipes the screen, so we replay up to (but not including) the clear that
+  // starts the NEXT slide's step.
+  function clearIndexAfterBeat(targetBeat) {
+    for (let i = 0; i < recording.events.length; i++) {
+      const e = recording.events[i];
+      if (e.type === 'beat' && e.beat === targetBeat) {
+        for (let j = i + 1; j < recording.events.length; j++) {
+          if (recording.events[j].type === 'term' && recording.events[j].data.indexOf('\x1b[3J') >= 0) return j;
+        }
+        return recording.events.length - 1;
+      }
+    }
+    return -1;
+  }
+
+  function computeRecEndIdx() {
+    // entry beat per slide from the deck's beat→slide mapping
+    const entryBeat = {};
+    for (const b of window.BEATS) entryBeat[b.slide] = b.beat;
+    const slides = Object.keys(entryBeat).map(Number).filter((s) => s >= 2).sort((a, b) => a - b);
+    for (let k = 0; k < slides.length; k++) {
+      const s = slides[k];
+      let boundary;
+      if (k + 1 < slides.length) {
+        // stop just before the clear that starts the next slide's step
+        boundary = clearIndexAfterBeat(entryBeat[slides[k + 1]]) - 1;
+      } else {
+        boundary = recording.events.length - 1; // last slide: show the finish
+      }
+      recEndIdx[s] = boundary < 0 ? -1 : boundary;
+    }
+  }
+
+  function renderRecordedSlide(index) {
+    if (!recordedMode || !recording) return;
+    if (term) {
+      term.reset();
+      let lastBeat = 0;
+      const endIdx = (index >= 2 && recEndIdx[index] != null) ? recEndIdx[index] : -1;
+      for (let i = 0; i <= endIdx; i++) {
+        const ev = recording.events[i];
+        if (ev.type === 'term') term.write(ev.data);
+        else if (ev.type === 'beat') lastBeat = ev.beat;
+        else if (ev.type === 'stats') handleMessage(ev);
+      }
+      currentBeat = lastBeat;
+      const beatEl = document.getElementById('hud-beat');
+      if (beatEl) beatEl.textContent = `beat ${lastBeat}`;
+    }
+    if (index < 2) {
+      // intro / bridge / after the demo: clear the live figures
+      statsByStage = {};
+      currentStage = null;
+      updateHUD();
+    }
+    const label = index >= 2 ? `recorded · slide ${index}` : 'recorded · use ← / → to navigate';
+    setStatus(label);
   }
 
   // ------------------------------------------------------------------
@@ -238,6 +357,13 @@
         <td>${s.mem != null ? s.mem.toFixed(1) : '—'}</td>
       </tr>` : '';
     body.innerHTML = row('Spring Boot 2.6 · Java 8', b, b && b.cves) + row('Spring Boot 4.1 · Java 27', f, f && f.cves);
+    const outcome = document.getElementById('upgrade-outcome');
+    if (outcome && f && f.cves != null) {
+      outcome.textContent = f.cves === 0
+        ? 'The major upgrade cleared every known CVE. The patch pass now verifies dependency currency.'
+        : `The major upgrade removed most of the risk. ${f.cves} known ${f.cves === 1 ? 'CVE remains' : 'CVEs remain'} for the patch pass.`;
+      outcome.classList.toggle('all-clear', f.cves === 0);
+    }
   }
 
   function updatePayoff() {
@@ -346,6 +472,7 @@
     const start = document.getElementById('btn-start');
     if (start) {
       start.addEventListener('click', () => {
+        if (recordedMode) return; // start button is hidden in recorded mode
         send('start');
         start.classList.add('started');
         start.textContent = 'Demo started — press ⏎ to advance';
@@ -356,10 +483,15 @@
     if (restart) {
       restart.addEventListener('click', () => {
         if (term) term.reset();
-        send('restart');
-        currentBeat = 0;
-        firedOpens.clear(); // allow auto-open URLs to fire again on the next pass
-        goToSlide(0);
+        if (recordedMode) {
+          currentBeat = 0;
+          goToSlide(0); // slidechanged -> renderRecordedSlide resets the view
+        } else {
+          send('restart');
+          currentBeat = 0;
+          firedOpens.clear(); // allow auto-open URLs to fire again on the next pass
+          goToSlide(0);
+        }
         restart.blur();
       });
     }

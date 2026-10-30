@@ -7,9 +7,12 @@ const { WebSocketServer } = require('ws');
 const pty = require('node-pty');
 
 const ROOT = __dirname;
-const DECK = path.join(ROOT, 'deck');
+const DECK = path.join(ROOT, 'docs');
 const PORT = process.env.PORT || 4173;
 const DEMO_SCRIPT = process.env.DEMO_SCRIPT || './demo.sh';
+// When set, the server records the demo's WS event stream (terminal output,
+// beats, stats) so the deck can replay it statically on GitHub Pages.
+const RECORD_FILE = process.env.RECORD || '';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -28,22 +31,9 @@ const MIME = {
   '.map': 'application/json',
 };
 
-// URL -> filesystem path. Vendored client libs come straight from node_modules
-// so the deck stays fully offline.
-const ROUTES = {
-  '/vendor/reveal.js': 'node_modules/reveal.js/dist/reveal.js',
-  '/vendor/reveal.mjs': 'node_modules/reveal.js/dist/reveal.mjs',
-  '/vendor/reveal.css': 'node_modules/reveal.js/dist/reveal.css',
-  '/vendor/reset.css': 'node_modules/reveal.js/dist/reset.css',
-  '/vendor/theme/black.css': 'node_modules/reveal.js/dist/theme/black.css',
-  '/vendor/plugin/notes.js': 'node_modules/reveal.js/dist/plugin/notes.js',
-  '/vendor/plugin/notes.mjs': 'node_modules/reveal.js/dist/plugin/notes.mjs',
-  '/vendor/plugin/highlight.js': 'node_modules/reveal.js/dist/plugin/highlight.js',
-  '/vendor/plugin/highlight.mjs': 'node_modules/reveal.js/dist/plugin/highlight.mjs',
-  '/vendor/xterm.js': 'node_modules/xterm/lib/xterm.js',
-  '/vendor/xterm.css': 'node_modules/xterm/css/xterm.css',
-  '/vendor/addon-fit.js': 'node_modules/@xterm/addon-fit/lib/addon-fit.js',
-};
+// URL -> filesystem path. Vendored client libs live in docs/vendor (committed
+// so the published deck is self-contained); they are served as static files.
+const ROUTES = {};
 
 function loadEnv() {
   const env = { ...process.env };
@@ -62,7 +52,7 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/') {
     return sendFile(res, path.join(DECK, 'index.html'));
   }
-  if (urlPath.startsWith('/css/') || urlPath.startsWith('/js/') || urlPath.startsWith('/fonts/') || urlPath.startsWith('/img/')) {
+  if (urlPath.startsWith('/css/') || urlPath.startsWith('/js/') || urlPath.startsWith('/fonts/') || urlPath.startsWith('/img/') || urlPath.startsWith('/vendor/') || urlPath.startsWith('/recorded/')) {
     const file = path.join(DECK, urlPath);
     if (!file.startsWith(DECK)) return send404(res);
     return sendFile(res, file);
@@ -96,7 +86,7 @@ function send404(res) {
 
 // ---------------------------------------------------------------------------
 // Auto-open URLs on the presenter's machine. The deck POSTs { url } here when
-// a slide with data-open-url becomes visible (e.g. the Tanzu Hub slide).
+// a slide with data-open-url becomes visible.
 // ---------------------------------------------------------------------------
 function handleOpen(req, res) {
   let body = '';
@@ -137,11 +127,15 @@ let ptyProcess = null;
 let demoRunning = false;
 let currentBeat = 0;
 let termHistory = '';
+let recEvents = []; // event stream captured when RECORD_FILE is set
 
 function broadcast(obj) {
   const s = JSON.stringify(obj);
   for (const c of clients) {
     if (c.readyState === 1) c.send(s);
+  }
+  if (RECORD_FILE && (obj.type === 'term' || obj.type === 'beat' || obj.type === 'stats' || obj.type === 'exit')) {
+    recEvents.push(obj);
   }
 }
 
@@ -172,6 +166,7 @@ function startDemo() {
   }
   currentBeat = 0;
   termHistory = '';
+  recEvents = [];
   const env = loadEnv();
   const shell = process.env.SHELL || '/bin/bash';
   ptyProcess = pty.spawn(shell, ['-lc', `cd ${JSON.stringify(ROOT)} && exec ${DEMO_SCRIPT}`], {
@@ -187,6 +182,23 @@ function startDemo() {
     demoRunning = false;
     broadcast({ type: 'term', data: `\r\n\x1b[1;32m[demo finished, exit ${exitCode}]\x1b[0m\r\n` });
     broadcast({ type: 'exit', code: exitCode });
+    if (RECORD_FILE) {
+      try {
+        fs.writeFileSync(RECORD_FILE, JSON.stringify({
+          meta: {
+            slides: 20,
+            demoSliceFirst: 2,
+            demoSliceLast: 19,
+            recordedAt: new Date().toISOString(),
+            exitCode,
+          },
+          events: recEvents,
+        }));
+        console.log(`  [record] ${recEvents.length} events → ${RECORD_FILE}`);
+      } catch (err) {
+        console.error(`  [record] failed to write ${RECORD_FILE}: ${err.message}`);
+      }
+    }
   });
   broadcast({ type: 'started', beat: 0 });
 }

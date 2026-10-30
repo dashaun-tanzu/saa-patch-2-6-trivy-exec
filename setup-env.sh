@@ -32,6 +32,7 @@ echo "SDKMAN is installed"
 
 JAVA8_VERSION=$(grep '^java=8' .sdkmanrc | cut -d'=' -f2)
 JAVA17_VERSION=$(grep '^java=17' .sdkmanrc | cut -d'=' -f2)
+JAVA27_VERSION=$(grep '^java=27' .sdkmanrc | cut -d'=' -f2)
 
 echo ""
 echo "Checking Java versions..."
@@ -46,7 +47,12 @@ if ! sdk list java | grep -q "$JAVA17_VERSION"; then
     sdk install java "$JAVA17_VERSION"
 fi
 
-echo "Java $JAVA8_VERSION and Java $JAVA17_VERSION are installed"
+if ! sdk list java | grep -q "$JAVA27_VERSION"; then
+    echo "Installing Java $JAVA27_VERSION..."
+    sdk install java "$JAVA27_VERSION"
+fi
+
+echo "Java $JAVA8_VERSION, Java $JAVA17_VERSION, and Java $JAVA27_VERSION are installed"
 
 echo ""
 echo "Checking Trivy CLI..."
@@ -100,7 +106,7 @@ fi
 
 if [ -z "$ADVISOR_VERSION" ]; then
     echo "ADVISOR_VERSION is not set"
-    echo "Set it in .envrc (e.g., export ADVISOR_VERSION=1.5.7)"
+    echo "Set it in .envrc (e.g., export ADVISOR_VERSION=1.7.1)"
     exit 1
 fi
 echo "ADVISOR_VERSION=$ADVISOR_VERSION"

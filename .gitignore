@@ -1,9 +1,19 @@
+# local / machine state
 .idea
+.vscode/
+.DS_Store
 node_modules
+spring-shell.log
+*.log
+
+# vendir deps (re-fetched with `vendir sync`)
 vendir
 vendir.lock.yml
-spring-shell.log
+
+# runtime demo output (recreated by demo.sh / the live run)
 upgrade-example
-AGENTS.md
 demo.cast
 demo-run.log
+
+# internal agent guidance (kept out of the public repo)
+AGENTS.md

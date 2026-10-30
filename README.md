@@ -1,101 +1,128 @@
-# Spring Application Advisor — Executive Deck (saa-patch-2-6-trivy-exec)
+# Spring Application Advisor — Live Executive Demo
 
-A **presenter-driven, executive version** of the `saa-patch-2-6-trivy-demo`
-terminal demo. It's a self-contained web deck that runs the *real* `demo.sh`
-in a live terminal docked at the bottom of every slide. As the presenter
-advances the demo, the slides follow the terminal — so you stay "above the
-code" and tell the story while the actual upgrade happens in front of the
+A presenter-driven deck that runs the Spring Application Advisor terminal demo
+live, with a real terminal docked at the bottom of every slide. As the presenter
+advances the demo, the slides follow the terminal — so you can tell the
+executive story above the code while the actual upgrade runs in front of the
 audience.
+
+The deck lives in [`docs/`](docs/), so it can be published as-is on GitHub
+Pages as a static site. When it can't reach a live demo server (i.e. on GitHub
+Pages), it automatically replays a **recorded walkthrough** of the demo in the
+same click-through, slides-follow-terminal model.
+
+## What it does
+
+The demo takes a real Spring Boot 2.6 application on Java 8 all the way to
+Spring Boot 4.1 on Java 27 — analyzed, upgraded, patched, and measured — in one
+live run:
+
+- **Act I · Analyze** — Advisor captures the software bill of materials, git
+  metadata, Maven coordinates, and build tools; Trivy scans the dependency graph.
+- **Act II · Upgrade** — Advisor produces an ordered upgrade plan, squashes 11
+  migration steps into a single pass, and swaps the runtime to Java 27.
+- **Act III · Patch** — Advisor takes every dependency to its latest patch
+  release, and the result is re-scanned.
+
+The deck ships with `demo.sh`, which drives the whole thing: each stage builds
+and runs the app, records startup time and memory, and writes the live numbers
+the slides stream in.
 
 ## What you get
 
-- **16 executive slides** — one per story beat (Analyze → Upgrade → Patch),
-  dark theme with a Spring-green accent.
-- **Live terminal** — the real `demo.sh` runs in a PTY via `node-pty`; the
-  presenter drives it with the keyboard exactly like the terminal demo.
-- **Slide sync** — each `clear` in the demo (demo-magic's `talkingPoint`) is
-  a beat; the deck navigates to the slide for the current beat.
+- **20 executive slides** — one live Analyze → Upgrade → Patch story in a dark
+  theme with a Spring-green accent.
+- **Live terminal** — the real `demo.sh` runs in a PTY; the presenter drives it
+  with the keyboard, exactly like the terminal demo.
+- **Slide sync** — the slides follow the terminal as it advances, so the story
+  stays aligned with what's running at any moment.
 - **Live numbers** — CVE counts, dependency counts, startup time, and memory
-  are read from the `upgrade-example/` files the demo writes, and stream into
-  a corner HUD and the payoff charts in real time. Numbers are always from
-  *this* run — CVEs change every hour, so nothing is hardcoded.
+  come from *this* run; nothing is a hardcoded value.
+- **Recorded walkthrough** — when there's no live server, the deck replays a
+  captured run and you navigate it with normal Reveal controls (← / →), like
+  any other presentation. Each slide shows the terminal and stats as they were
+  at that point in the demo.
 
-## Quick start
+## Run it live
 
 ```bash
-./run.sh          # installs deps (first time), starts server, opens the browser
+./run.sh    # installs deps (first time), starts the server, opens the browser
 ```
 
-Then, on the title slide, click **▶ Start the live demo**. Advance the demo
-with **Enter / Space** — the slides follow the terminal.
+Then, on the title slide, click **▶ Start the live demo**, and advance with
+**Enter / Space**. The slides follow the terminal.
 
 Requires the same prerequisites as the terminal demo (SDKMAN, Spring
 Application Advisor, Trivy, vendir, httpie, jq, bc, git, tar, network) plus
-Node.js (>= 18). `ADVISOR_VERSION` is read from `.envrc` (default 1.6.7).
+Node.js (>= 18). `ADVISOR_VERSION` is read from `.envrc` (currently 1.7.1).
 
-> The app is upgraded to Boot 4.1 and **runs on Java 27**. Advisor's
-> OpenRewrite recipes still execute on a pinned toolchain JDK (third `java=`
-> line in `.sdkmanrc`) because they can't parse on JDK 27 yet — invisible to
-> the audience; the demo shows the clean advisor commands.
+## Publish on GitHub Pages
 
-## How the presenter-driven sync works
+The whole deck — Reveal.js, xterm.js, fonts, and the recorded walkthrough — is
+committed under `docs/`, so `docs/` is a self-contained static site.
 
-1. `demo.sh`'s `talkingPoint` is demo-magic's `wait` (one silent keypress,
-   auto-advances after `PROMPT_TIMEOUT=5`) followed by `clear`.
-2. The presenter presses a key **in the deck** → it's forwarded to the PTY →
-   the demo advances and clears the screen.
-3. The server detects each `\x1b[3J\x1b[H\x1b[2J` clear sequence, increments
-   a beat counter, and broadcasts it.
-4. The deck navigates to the slide mapped for that beat (`deck/js/beats.js`).
+1. In the repo Settings → Pages, set **Source** to *Deploy from a branch* and
+   select the `main` branch with the `/docs` folder.
+2. Visit your Pages URL. The deck loads and, because no live demo server is
+   reachable, switches to the recorded walkthrough. It behaves like a normal
+   presentation: use **← / → (arrows or the on-screen controls)** to move
+   through the slides, forward and backward. The docked terminal and the live
+   numbers update to show the demo state at each slide.
 
-Because the slides follow the terminal (not the other way round), the 5s
-auto-advance timeout and a browser reload both stay in sync — the server is
-the source of truth and reconnects replay recent output.
+You can also force recorded mode locally with `?recorded` on the URL.
+
+## Record a fresh walkthrough
+
+The published deck replays whatever is in `docs/recorded/walkthrough.json`. To
+re-capture it (e.g. after bumping Advisor or when the numbers change), run the
+real demo against the server with recording enabled:
+
+```bash
+npm run record      # starts the server with RECORD on and drives demo.sh to completion
+```
+
+This writes a fresh `docs/recorded/walkthrough.json` with the terminal output,
+beat count, and stats for all three stages. Commit it and the published deck
+replays the new run.
 
 ## Controls
 
 | Key | Effect |
 |-----|--------|
-| `Enter` / `Space` | advance the live demo (and thus the slides) |
-| `Esc` | send Escape to the terminal |
-| `↻ restart` (HUD) | kill and restart `demo.sh` from slide 0 |
-| Arrow keys / click | Reveal navigation (also available) |
+| `←` / `→` (or on-screen arrows) | navigate the deck, forward and backward |
+| `Enter` / `Space` | live mode: advance the demo (and thus the slides) |
+| `Esc` | live mode: send Escape to the terminal |
+| `Restart` (terminal bar) | live mode: kill and restart the demo; recorded mode: return to slide 0 |
+| `Home` / `End` | jump to the first / last slide |
 
 ## Project layout
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `server.js` | static file server + WebSocket + PTY spawn of `demo.sh` + stats watcher |
-| `deck/index.html` | the Reveal deck: slides, docked terminal, HUD |
-| `deck/js/app.js` | terminal I/O, WS client, beat→slide navigation, live stats rendering |
-| `deck/js/beats.js` | beat → slide mapping (edit to regroup slides) |
-| `deck/css/exec.css` | theme |
+| `docs/index.html` | the Reveal deck: slides, docked terminal, HUD |
+| `docs/js/app.js` | terminal I/O, WS client, recorded replay, beat→slide nav, live stats |
+| `docs/js/beats.js` | beat → slide mapping |
+| `docs/css/exec.css` | theme |
+| `docs/vendor/` | Reveal.js, xterm.js, addon-fit (committed, offline-safe) |
+| `docs/recorded/walkthrough.json` | the recorded demo the static deck replays |
+| `server.js` | static server + WebSocket + PTY spawn of `demo.sh` + stats watcher (+ `RECORD` capture) |
 | `run.sh` | install-if-needed, start server, open browser |
-| `scripts/smoke-test.js` | automated server+PTY+sync test (`npm run smoke`) |
+| `record-walkthrough.js` | `npm run record` — drive the demo and write the recording |
+| `scripts/smoke-test.js` | automated server + PTY + sync + recording test (`npm run smoke`) |
 | `demo.sh` + friends | self-contained copy of the terminal demo |
 
-Client libraries (Reveal.js, xterm.js) are served straight from `node_modules`,
-so the deck works fully offline once installed.
-
-## Adjusting the slide mapping
-
-`deck/js/beats.js` lists `{ beat, slide }` thresholds. Each entry means "when
-the demo's clear counter reaches `beat`, show slide `slide`". The demo has 31
-clears (beat 1 is `init` at startup); the wrap slide is reached when the demo
-exits cleanly. Regroup the executive story by changing these thresholds.
+Client libraries and the recording are committed, so `docs/` works fully
+offline and on GitHub Pages with no build step.
 
 ## Testing
 
 ```bash
-npm run smoke      # boots the server against a fast fake demo, drives beats, checks assets
+npm run smoke    # boots the server against a fast fake demo, drives beats, checks assets + recording
 ```
-
-A real end-to-end check is just running `./run.sh` and presenting — the demo
-itself is the test.
 
 ## Attribution
 
-Same story and demo script as
-[`saa-patch-2-6-trivy-demo`](https://github.com/dashaun-tanzu/saa-patch-2-6-trivy-demo).
-Reveal.js, xterm.js, node-pty, and demo-magic are used under their respective
-licenses.
+The underlying demo and story come from the
+[`saa-patch-2-6-trivy-demo`](https://github.com/dashaun-tanzu/saa-patch-2-6-trivy-demo)
+terminal demo. Reveal.js, xterm.js, node-pty, and demo-magic are used under
+their respective licenses.

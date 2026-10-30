@@ -40,9 +40,7 @@ async function main() {
   let lastPrint = 0;
 
   while (Date.now() - t0 < MAX_SECONDS * 1000) {
-    const patched = stats.find((s) => s.stage === 'java27patched');
-    if (patched && patched.cves === 0 && patched.health === 'UP' && patched.startup != null) break;
-    if (beat >= 31 || exitCode !== null) break;
+    if (exitCode !== null) break;
     ws.send('\r');
     await sleep(1200);
     if (Date.now() - lastPrint > 30000) {
@@ -63,6 +61,8 @@ async function main() {
   const four = stats.find((s) => s.stage === 'java27with4.0') || {};
   const patched = stats.find((s) => s.stage === 'java27patched') || {};
   const checks = {
+    'all 31 beats reached': beat === 31,
+    'demo exited cleanly': exitCode === 0,
     'java 27 selected': clean.includes('Using java version 27.0.0+36-librca'),
     'java -version shows 27': /openjdk version "27"/.test(clean),
     'keys step removed': !clean.includes('top level elements'),

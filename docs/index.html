@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spring Application Advisor — Continuous Migration, Continuous Remediation, Continuous Modernization</title>
-  <link rel="stylesheet" href="/vendor/reset.css">
-  <link rel="stylesheet" href="/vendor/reveal.css">
-  <link rel="stylesheet" href="/vendor/theme/black.css">
-  <link rel="stylesheet" href="/vendor/xterm.css">
-  <link rel="stylesheet" href="/css/exec.css">
+  <link rel="stylesheet" href="vendor/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.css">
+  <link rel="stylesheet" href="vendor/theme/black.css">
+  <link rel="stylesheet" href="vendor/xterm.css">
+  <link rel="stylesheet" href="css/exec.css">
 </head>
 <body>
 
@@ -22,47 +22,26 @@
     <section class="beat" data-slide="0">
       <div class="kicker">Spring Application Advisor · live</div>
       <h1 class="hero">Continuous Migration, Continuous Remediation, <span class="green-num">Continuous Modernization</span></h1>
-      <p class="lead">Automatically upgrading a legacy Spring Boot 2.6 app to Boot 4.1 on Java 27 — and patching every dependency to clear the remaining vulnerabilities. Then: the same story for an entire portfolio.</p>
+      <p class="lead">Automatically upgrading a legacy Spring Boot 2.6 app to Boot 4.1 on Java 27, then applying the latest dependency patches.</p>
       <div class="acts">
         <span class="chip act-a">Act I · Analyze</span>
         <span class="chip act-b">Act II · Upgrade</span>
         <span class="chip act-c">Act III · Patch</span>
       </div>
-      <p class="hint">Use <kbd>→</kbd> or click to move forward — the live demo starts a few slides in.</p>
+      <p class="hint">Use <kbd>→</kbd> or click to move forward. The live upgrade starts next.</p>
     </section>
 
-    <!-- 1 · THE PORTFOLIO (dashaun-demo org) -------------------------- -->
+    <!-- 1 · BRIDGE / START THE DEMO ------------------------------------ -->
     <section class="beat" data-slide="1">
-      <div class="kicker">The portfolio · github.com/dashaun-demo</div>
-      <h1>18 repositories. Every one needs attention.</h1>
-      <p class="lead">A portfolio of real Spring apps, spread across a decade of Spring Boot releases. <strong>[AdvisorBot]</strong> is working through them right now — on another machine, in the background, while we talk.</p>
-      <table class="cmp-table compact">
-        <thead><tr><th>Application</th><th>Spring Boot</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>xyz.gofastforever.account</td><td>1.5.17</td><td class="bad">upgrade PR open</td></tr>
-          <tr><td>spring-petclinic</td><td>2.7.3</td><td class="bad">upgrade PR open</td></tr>
-          <tr><td>simple-rag</td><td>3.2.5</td><td class="bad">upgrade PR open</td></tr>
-          <tr><td>chat-ui</td><td>3.2.19</td><td class="bad">upgrade PR open</td></tr>
-          <tr><td>spring-cloud-vault-demo</td><td>3.5.4</td><td class="warn">patch PR open</td></tr>
-          <tr><td>modulith-simple</td><td>3.5.17</td><td class="warn">patch PR open</td></tr>
-          <tr><td>simple-batch</td><td>4.0.7</td><td class="warn">patch PR open</td></tr>
-          <tr><td>jpa-h2</td><td>4.0.7</td><td class="ok">current</td></tr>
-        </tbody>
-      </table>
-      <p class="hint">A representative slice of the org — 18 repositories, statuses as of today. The pull requests you see later are opened live during this talk.</p>
-    </section>
-
-    <!-- 2 · BRIDGE / START THE DEMO ------------------------------------ -->
-    <section class="beat" data-slide="2">
       <div class="kicker">Live demo</div>
-      <h1>One of these. Live. Right now.</h1>
-      <p class="lead">By the numbers, an org looks like a spreadsheet. So let's take a single application all the way from Spring Boot 2.6 on Java 8 to Spring Boot 4.1 on Java 27 — analyzed, upgraded, and patched — in front of you.</p>
-      <button id="btn-start" class="start-btn">▶ Start the live demo</button>
-      <p class="hint">After it starts, press <kbd>Enter</kbd> / <kbd>Space</kbd> to advance the demo — the slides follow the terminal, at your pace. No auto-advance: nothing moves unless you press.</p>
+      <h1>One application. Live. Right now.</h1>
+      <p class="lead">We will take a Spring Boot 2.6 application on Java 8 all the way to Spring Boot 4.1 on Java 27, analyzed, upgraded, patched, and measured in front of you.</p>
+      <button id="btn-start" class="start-btn" type="button">Start the live demo</button>
+      <p class="hint" id="start-hint">After it starts, press <kbd>Enter</kbd> / <kbd>Space</kbd> to advance the demo — the slides follow the terminal, at your pace. No auto-advance: nothing moves unless you press.</p>
     </section>
 
     <!-- 3 · LEGACY BASELINE ------------------------------------------- -->
-    <section class="beat" data-slide="3">
+    <section class="beat" data-slide="2">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>The legacy baseline</h1>
       <p>A real Spring Boot <strong>2.6</strong> application on <strong>Java 8</strong> — frozen in 2021. Every dependency at its oldest, an aging runtime, and a growing list of known vulnerabilities.</p>
@@ -75,7 +54,7 @@
     </section>
 
     <!-- 4 · ADVISOR READS THE APP ------------------------------------- -->
-    <section class="beat" data-slide="4">
+    <section class="beat" data-slide="3">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>Advisor reads the app like a book</h1>
       <p>One command — <code>advisor build-config get</code> — captures the software bill of materials, the git history, and the build toolchain of the whole project.</p>
@@ -91,7 +70,7 @@
     </section>
 
     <!-- 5 · GIT METADATA ------------------------------------------------ -->
-    <section class="beat" data-slide="5">
+    <section class="beat" data-slide="4">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>Git metadata</h1>
       <p>Repository, branch, and commit — provenance for every plan and patch that follows. Every upgrade Advisor proposes traces back to exactly this point in history.</p>
@@ -99,7 +78,7 @@
     </section>
 
     <!-- 6 · THE SBOM ----------------------------------------------------- -->
-    <section class="beat" data-slide="6">
+    <section class="beat" data-slide="5">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>The SBOM</h1>
       <p>Every component in the dependency graph, captured as a CycloneDX bill of materials — the same graph Trivy scans for vulnerabilities in a moment.</p>
@@ -107,7 +86,7 @@
     </section>
 
     <!-- 7 · MAVEN COORDINATES --------------------------------------------- -->
-    <section class="beat" data-slide="7">
+    <section class="beat" data-slide="6">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>Maven coordinates</h1>
       <p>The <code>groupId:artifactId</code> of every module in the project — the exact addresses Advisor reasons about when it builds an upgrade plan.</p>
@@ -115,7 +94,7 @@
     </section>
 
     <!-- 8 · THE TOOLS ------------------------------------------------------ -->
-    <section class="beat" data-slide="8">
+    <section class="beat" data-slide="7">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>The tools</h1>
       <p>Build tool and version, JVM, advisor version — the toolchain captured as data, so every result is reproducible and every upgrade is planned against what is really there.</p>
@@ -123,7 +102,7 @@
     </section>
 
     <!-- 9 · TRIVY SCAN #1 ---------------------------------------------- -->
-    <section class="beat" data-slide="9">
+    <section class="beat" data-slide="8">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>The baseline security posture</h1>
       <p>We scan the advisor-generated CycloneDX SBOM with <strong>Trivy</strong>. No extra tooling — the same dependency graph drives both the count and the CVEs.</p>
@@ -131,7 +110,7 @@
     </section>
 
     <!-- 10 · BASELINE MEASURED ------------------------------------------ -->
-    <section class="beat" data-slide="10">
+    <section class="beat" data-slide="9">
       <div class="act-badge act-a">Act I · Analyze</div>
       <h1>What “normal” costs today</h1>
       <p>The app is healthy and responding. Startup time and memory are the cost of living on 2021-era dependencies.</p>
@@ -143,7 +122,7 @@
     </section>
 
     <!-- 11 · THE PLAN ---------------------------------------------------- -->
-    <section class="beat" data-slide="11">
+    <section class="beat" data-slide="10">
       <div class="act-badge act-b">Act II · Upgrade</div>
       <h1>How hard could it be?</h1>
       <p><code>advisor upgrade-plan get</code> analyzes the gap and produces an exact, ordered upgrade plan — every library change needed to get to Spring Boot 4.1.</p>
@@ -157,15 +136,15 @@
     </section>
 
     <!-- 12 · JAVA 27 ------------------------------------------------------ -->
-    <section class="beat" data-slide="12">
+    <section class="beat" data-slide="11">
       <div class="act-badge act-b">Act II · Upgrade</div>
       <h1>A modern runtime, ready</h1>
-      <p>SDKMAN swaps in <strong>Java 27</strong> — a supported, modern LTS — while Advisor keeps working on the same project.</p>
-      <div class="big-number"><span class="green-num">Java 27</span><span class="big-unit">LTS runtime</span></div>
+      <p>SDKMAN swaps in <strong>Java 27</strong>, the current Java feature release, while Advisor keeps working on the same project.</p>
+      <div class="big-number"><span class="green-num">Java 27</span><span class="big-unit">current feature release</span></div>
     </section>
 
     <!-- 13 · THE BIG UPGRADE ---------------------------------------------- -->
-    <section class="beat" data-slide="13">
+    <section class="beat" data-slide="12">
       <div class="act-badge act-b">Act II · Upgrade</div>
       <h1>Spring Boot 4.1 in one pass</h1>
       <p>Normally this is done one release at a time — there are <strong>11 steps</strong> between Spring Boot 2.6 and Spring Boot 4.1, each with its own migration work. <code>advisor upgrade-plan apply --squash 11</code> squashes all of them into a single pass — no manual code changes. Then it re-reads the app to capture the new SBOM.</p>
@@ -177,15 +156,15 @@
     </section>
 
     <!-- 13 · TRIVY SCAN #2 ------------------------------------------------ -->
-    <section class="beat" data-slide="14">
+    <section class="beat" data-slide="13">
       <div class="act-badge act-b">Act II · Upgrade</div>
-      <h1>The big jump — but not the whole story</h1>
-      <p>Boot 4.1 on Java 27 is dramatically better — yet the scan still finds residual CVEs in the dependency graph.</p>
-      <div class="big-number bad"><span id="four-cves" class="live">—</span><span class="big-unit">residual CVEs</span></div>
+      <h1>Verify the landing</h1>
+      <p>The version label is not the result. We scan the upgraded dependency graph again and let the evidence tell us what remains.</p>
+      <div class="big-number bad"><span id="four-cves" class="live">—</span><span class="big-unit">known CVEs after upgrade</span></div>
     </section>
 
     <!-- 14 · MEASURE #2 ---------------------------------------------------- -->
-    <section class="beat" data-slide="15">
+    <section class="beat" data-slide="14">
       <div class="act-badge act-b">Act II · Upgrade</div>
       <h1>Faster and lighter</h1>
       <p>The upgraded app starts quicker and uses less memory — the reward for modern Spring Boot + a modern JVM.</p>
@@ -197,38 +176,38 @@
     </section>
 
     <!-- 15 · TABLE #1 --------------------------------------------------------- -->
-    <section class="beat" data-slide="16">
+    <section class="beat" data-slide="15">
       <div class="act-badge act-b">Act II · Upgrade</div>
       <h1>Two rows, one clear gap</h1>
       <table class="cmp-table">
         <thead><tr><th>Configuration</th><th>Startup</th><th>Deps</th><th>CVEs</th><th>Memory</th></tr></thead>
         <tbody id="t1-body"></tbody>
       </table>
-      <p class="gap-callout">The major upgrade helped a lot — but the CVE column is still not zero.</p>
+      <p class="gap-callout" id="upgrade-outcome" aria-live="polite">Waiting for the post-upgrade scan.</p>
     </section>
 
     <!-- 16 · PATCH APPLY ------------------------------------------------------- -->
-    <section class="beat" data-slide="17">
+    <section class="beat" data-slide="16">
       <div class="act-badge act-c">Act III · Patch</div>
-      <h1>Finish the job</h1>
-      <p><code>advisor patch apply</code> takes every dependency to its <strong>latest patch release</strong> — one command, closing the remaining CVEs without another major migration.</p>
+      <h1>Make currency continuous</h1>
+      <p><code>advisor patch apply</code> takes every dependency to its <strong>latest patch release</strong>. If the upgrade cleared every CVE, this proves the app is current. If drift remains, this closes it without another major migration.</p>
       <div class="flow">
-        <span class="flow-node">4.1 with gaps</span>
+        <span class="flow-node">4.1 verified</span>
         <span class="flow-arrow">→</span>
         <span class="flow-node done">4.1 · all deps current</span>
       </div>
     </section>
 
     <!-- 17 · TRIVY SCAN #3 ------------------------------------------------------- -->
-    <section class="beat" data-slide="18">
+    <section class="beat" data-slide="17">
       <div class="act-badge act-c">Act III · Patch</div>
       <h1>Zero</h1>
       <div class="big-number green"><span id="patched-cves" class="live">—</span><span class="big-unit">known CVEs</span></div>
-      <p>Residual vulnerabilities closed. The dependency graph is fully patched.</p>
+      <p>The dependency graph is fully patched and scanned again. Zero is evidence from this run, not a promise baked into the slide.</p>
     </section>
 
     <!-- 18 · PAYOFF --------------------------------------------------------------- -->
-    <section class="beat" data-slide="19">
+    <section class="beat" data-slide="18">
       <div class="act-badge act-c">Act III · Patch</div>
       <h1>The payoff</h1>
       <p class="lead">Same app, three stages — all from this live run.</p>
@@ -236,7 +215,7 @@
     </section>
 
     <!-- 19 · WRAP ------------------------------------------------------------------ -->
-    <section class="beat" data-slide="20">
+    <section class="beat" data-slide="19">
       <h1 class="hero">Zero manual edits. <span class="green-num">Zero CVEs.</span></h1>
       <div class="acts">
         <span class="chip act-a">Analyze</span>
@@ -249,99 +228,6 @@
         <li>Trivy on the advisor SBOM: <strong>0 CVEs</strong></li>
         <li>Faster startup · lower memory</li>
       </ul>
-      <p class="hint">Press <kbd>→</kbd> to see the same story across an entire portfolio.</p>
-    </section>
-
-    <!-- 20 · AT SCALE ---------------------------------------------------------------- -->
-    <section class="beat" data-slide="21">
-      <div class="kicker">At scale</div>
-      <h1>One app was the demo. The portfolio is the job.</h1>
-      <p class="lead">Customers run this against <strong>100,000+ Java repositories</strong>: advisor-loop walks the whole estate every hour, opening pull requests and patching CVEs continuously.</p>
-      <div class="stat-strip">
-        <div class="stat"><span class="stat-label">Repositories</span><span class="stat-value">100k+</span></div>
-        <div class="stat"><span class="stat-label">Pass cadence</span><span class="stat-value">hourly</span></div>
-        <div class="stat"><span class="stat-label">Hand edits</span><span class="stat-value">0</span></div>
-      </div>
-      <p class="hint">Two plain JVM processes — <code>advisor-loop</code> opens the PRs, <code>advisor-verify</code> answers them. No daemon, no scheduler: a pass runs, reports, and stops.</p>
-    </section>
-
-    <!-- 21 · THE LOOP (advisor-loop) --------------------------------------------------- -->
-    <section class="beat" data-slide="22">
-      <div class="kicker">advisor-loop · one pass through the org</div>
-      <h1>The loop</h1>
-      <div class="flow">
-        <span class="flow-node">list repos</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node">skip fresh PRs</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node">build-config get</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node">mapping loop</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node done">upgrade PR</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node done">patch PR</span>
-      </div>
-      <div class="console-block"><span class="dim">ORG/REPO                            ACTIVITY             STATUS</span>
---------------------------------------------------------------------
-dashaun-demo/spring-petclinic       build-config get     <span class="ok">success</span>
-dashaun-demo/spring-petclinic       upgrade-plan get     <span class="ok">success</span>
-dashaun-demo/spring-petclinic       apply patch          <span class="ok">success</span>
-dashaun-demo/spring-petclinic       patch PR             <span class="ok">success</span>
-
-11 success, 1 fail, 1 skip</div>
-      <p class="hint">The output is the whole user interface: one line per activity, statuses only ever <code>success</code>, <code>fail</code>, or <code>skip</code>. A repo with a bot PR younger than 24h skips before advisor even runs — so re-runs are cheap.</p>
-    </section>
-
-    <!-- 22 · WHAT BEST LOOKS LIKE ------------------------------------------------------- -->
-    <section class="beat" data-slide="23">
-      <div class="kicker">advisor-loop · the steady state</div>
-      <h1>What “best” looks like</h1>
-      <ul class="summary">
-        <li>Every repository on the latest Spring Boot, every dependency at its latest patch</li>
-        <li>Bot PRs recycled every hour — stale ones closed, branches deleted, nothing piles up</li>
-        <li>A mapping learned for one repository unblocks the whole portfolio</li>
-        <li><code>advisor-verify</code> builds, deploys, and smoke-tests every PR automatically</li>
-        <li>Humans only do the part that matters: <strong>review and merge</strong></li>
-      </ul>
-      <p class="hint">The loop is the steady state — not a project, not a migration. Just the portfolio, always current.</p>
-    </section>
-
-    <!-- 23 · PROOF: BACK TO THE ORG ------------------------------------------------------ -->
-    <section class="beat" data-slide="24">
-      <div class="kicker">Proof · github.com/dashaun-demo</div>
-      <h1>Not slides. Pull requests.</h1>
-      <p class="lead">While we were in the live demo, <strong>[AdvisorBot]</strong> opened PRs across the org — and <code>advisor-verify</code> already answered them.</p>
-      <div class="flow">
-        <span class="flow-node">mvn verify</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node">cf push</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node">smoke test</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node">teardown</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-node done">report</span>
-      </div>
-      <ul class="summary">
-        <li>Built, deployed to a throwaway Cloud Foundry space, smoke-tested, torn down</li>
-        <li>Verdict posted as an <strong>enriched comment</strong> plus a commit status on the PR</li>
-        <li>It never merges — merging stays a human decision</li>
-      </ul>
-      <p class="hint">Let's go look at the real thing: the org, the PRs, and the comments advisor-verify left behind.</p>
-    </section>
-
-    <!-- 24 · TANZU HUB (auto-opens the URL) ---------------------------------------------- -->
-    <section class="beat" data-slide="25" data-open-url="https://tanzu-hub.kuhn-labs.com/hub/application-portfolio/summary">
-      <div class="kicker">Tanzu Hub · at scale</div>
-      <h1>This is what it looks like at scale</h1>
-      <p class="lead">The same activity — every application, every upgrade, every patched CVE — rolled up into <strong>Tanzu Hub</strong>'s application portfolio view.</p>
-      <ul class="summary">
-        <li>Portfolio-wide posture: versions, CVEs, and upgrade activity across the estate</li>
-        <li>The advisor-loop and advisor-verify results, visible to the whole organization</li>
-        <li>From one app in a terminal, to an org of pull requests, to a portfolio at scale</li>
-      </ul>
-      <p class="hint">Tanzu Hub opens automatically when this slide appears.</p>
     </section>
 
   </div>
@@ -352,14 +238,14 @@ dashaun-demo/spring-petclinic       patch PR             <span class="ok">succes
   <div id="terminal-bar">
     <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
     <span id="term-title">demo.sh — live</span>
-    <span id="status-text" class="status">connecting…</span>
-    <button id="btn-restart" class="mini-btn" title="Kill and restart the demo">↻ restart</button>
+    <span id="status-text" class="status" role="status" aria-live="polite">connecting…</span>
+    <button id="btn-restart" class="mini-btn" type="button" title="Kill the current demo and return to the title slide">Restart</button>
   </div>
   <div id="terminal"></div>
 </div>
 
 <!-- live metrics HUD --------------------------------------------------------- -->
-<div id="hud">
+<div id="hud" aria-label="Live demo metrics">
   <div class="hud-top"><span id="hud-stage">—</span><span id="hud-beat"></span></div>
   <div class="hud-grid">
     <div class="hud-item"><span class="hud-label">CVEs</span><span class="hud-value" id="hud-cves">—</span></div>
@@ -369,11 +255,11 @@ dashaun-demo/spring-petclinic       patch PR             <span class="ok">succes
   </div>
 </div>
 
-<script src="/vendor/reveal.js"></script>
-<script src="/vendor/plugin/notes.js"></script>
-<script src="/vendor/xterm.js"></script>
-<script src="/vendor/addon-fit.js"></script>
-<script src="/js/beats.js"></script>
-<script src="/js/app.js"></script>
+<script src="vendor/reveal.js"></script>
+<script src="vendor/plugin/notes.js"></script>
+<script src="vendor/xterm.js"></script>
+<script src="vendor/addon-fit.js"></script>
+<script src="js/beats.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

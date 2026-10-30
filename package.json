@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "smoke": "node scripts/smoke-test.js",
+    "record": "node scripts/record-walkthrough.js",
     "postinstall": "chmod +x node_modules/node-pty/prebuilds/*/spawn-helper 2>/dev/null || true"
   },
   "keywords": [],
